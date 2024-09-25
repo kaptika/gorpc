@@ -9,6 +9,7 @@ import (
 	"github.com/kaptika/common/validator"
 	"github.com/sethvargo/go-envconfig"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -67,4 +68,32 @@ func Shutdown() error {
 	server.GRPC.GracefulStop()
 
 	return nil
+}
+
+func NewTest(server *grpc.Server) (clientConn *grpc.ClientConn, closer func()) {
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		log.Errorf("Failed to listen localhost:0: %s", err)
+	}
+
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			log.Errorf("Error serving test server: %s", err)
+		}
+	}()
+
+	clientConn, err = grpc.NewClient(
+		lis.Addr().String(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Errorf("Failed to connect to server: %s", err)
+	}
+
+	closer = func() {
+		server.GracefulStop()
+		lis.Close()
+	}
+
+	return clientConn, closer
 }
