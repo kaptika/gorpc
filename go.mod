@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/kaptika/common v0.0.0-20240922090702-26a2a73e9c0d
 	github.com/sethvargo/go-envconfig v1.1.0
-	google.golang.org/grpc v1.67.0
+	google.golang.org/grpc v1.67.1
 )
 
 require (
